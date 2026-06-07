@@ -1,296 +1,398 @@
-import os
-from weasyprint import HTML
-
-# Define the high-fidelity HTML and CSS layout for the PDF
-html_content = """<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thinking-Optimal Mixture-of-Experts (TO-MoE) | Technical Specification</title>
 <style>
-    @page {
-        size: A4;
-        margin: 25mm 22mm 25mm 22mm;
-        @bottom-right {
-            content: counter(page);
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 9pt;
-            color: #666666;
-        }
-        @bottom-left {
-            content: "Conceptual Companion: Deep-Dive TO-MoE Learning Fabric";
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 9pt;
-            color: #666666;
-        }
+    :root {
+        --bg-main: #0B0F19;
+        --bg-card: #131A26;
+        --accent-purple: #8B5CF6;
+        --accent-blue: #3B82F6;
+        --accent-emerald: #10B981;
+        --text-primary: #F3F4F6;
+        --text-secondary: #9CA3AF;
+        --border-color: #242F41;
+        --gradient-primary: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
     }
-    
+
     body {
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         font-size: 11pt;
         line-height: 1.6;
-        color: #111111;
+        color: var(--text-primary);
+        background-color: var(--bg-main);
         margin: 0;
-        padding: 0;
+        padding: 40px 20px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .header-section {
+        text-align: left;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 5px 12px;
+        background: rgba(139, 92, 246, 0.15);
+        border: 1px solid var(--accent-purple);
+        color: #A78BFA;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
     }
 
     h1 {
-        font-size: 22pt;
-        font-weight: bold;
-        text-align: left;
-        margin-top: 0px;
-        margin-bottom: 8px;
-        color: #000000;
+        font-size: 26pt;
+        font-weight: 800;
+        margin: 0 0 10px 0;
+        background: linear-gradient(to right, #FFFFFF, #9CA3AF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         line-height: 1.2;
-        letter-spacing: -0.5px;
     }
-    
+   
     .subtitle {
         font-size: 13pt;
-        color: #555555;
-        margin-bottom: 35px;
+        color: var(--text-secondary);
+        margin-bottom: 30px;
         line-height: 1.5;
-        border-bottom: 2px solid #000000;
-        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 25px;
     }
 
     h2 {
-        font-size: 15pt;
-        font-weight: bold;
-        margin-top: 40px;
-        margin-bottom: 18px;
-        color: #000000;
-        border-bottom: 1px solid #cccccc;
-        padding-bottom: 6px;
-        page-break-after: avoid;
+        font-size: 16pt;
+        font-weight: 700;
+        margin-top: 45px;
+        margin-bottom: 20px;
+        color: #FFFFFF;
+        display: flex;
+        align-items: center;
+    }
+
+    h2::before {
+        content: "";
+        display: inline-block;
+        width: 4px;
+        height: 18px;
+        background: var(--gradient-primary);
+        margin-right: 12px;
+        border-radius: 2px;
     }
 
     h3 {
         font-size: 12.5pt;
-        font-weight: bold;
-        margin-top: 24px;
+        font-weight: 600;
+        margin-top: 25px;
         margin-bottom: 12px;
-        color: #222222;
-        page-break-after: avoid;
+        color: #E5E7EB;
     }
 
     p {
         margin-top: 0;
-        margin-bottom: 16px;
+        margin-bottom: 18px;
         text-align: justify;
+        color: #D1D5DB;
     }
 
     ul, ol {
         margin-top: 0;
-        margin-bottom: 16px;
-        padding-left: 24px;
+        margin-bottom: 18px;
+        padding-left: 25px;
     }
 
     li {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
         text-align: justify;
+        color: #D1D5DB;
     }
 
-    .analogy-box {
-        background-color: #f7f7f7;
-        border-left: 4px solid #000000;
-        padding: 18px;
-        margin: 22px 0;
-        font-size: 10.5pt;
+    /* Redesigned Premium Analogy Block */
+    .concept-card {
+        background: linear-gradient(145deg, #131A26 0%, #1A2333 100%);
+        border: 1px solid var(--border-color);
+        border-left: 4px solid var(--accent-purple);
+        border-radius: 8px;
+        padding: 22px;
+        margin: 25px 0;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     }
-    
-    .analogy-box-title {
-        font-weight: bold;
-        margin-bottom: 6px;
+   
+    .concept-card-title {
+        font-weight: 700;
+        margin-bottom: 10px;
         text-transform: uppercase;
         font-size: 9.5pt;
-        letter-spacing: 0.8px;
-        color: #000000;
+        letter-spacing: 1px;
+        color: var(--accent-purple);
+        display: flex;
+        align-items: center;
     }
 
-    .math-block {
+    /* Math Formula Display Box */
+    .math-panel {
         text-align: center;
-        margin: 22px 0;
+        margin: 24px 0;
         font-size: 12pt;
         font-family: 'Times New Roman', Times, serif;
         font-style: italic;
-        background: #fafafa;
-        padding: 10px;
-        border-radius: 4px;
+        background-color: #0E131F;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 16px;
+        border-radius: 6px;
+        color: #E5E7EB;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
     }
 
-    .flow-block {
-        font-family: 'Courier New', Courier, monospace;
+    /* Code & Algorithmic Console Block */
+    .terminal-console {
+        font-family: 'Fira Code', 'Courier New', Courier, monospace;
         font-size: 9.5pt;
-        background-color: #111111;
-        color: #f0f0f0;
-        border-left: 4px solid #666666;
-        padding: 16px;
-        margin: 22px 0;
+        background-color: #05070C;
+        color: #34D399;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 18px;
+        margin: 25px 0;
         white-space: pre;
         line-height: 1.5;
-        page-break-inside: avoid;
+        overflow-x: auto;
+        box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
+    .terminal-header {
+        color: #6EE7B7;
+        font-weight: bold;
+        border-bottom: 1px dashed #242F41;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* High-Tech Table Styles */
     table {
         width: 100%;
-        border-collapse: collapse;
-        margin: 28px 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 30px 0;
         font-size: 10pt;
-        page-break-inside: avoid;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
     }
 
     th {
-        background-color: #000000;
-        color: #ffffff;
-        font-weight: bold;
-        padding: 12px 10px;
+        background-color: #111827;
+        color: #FFFFFF;
+        font-weight: 600;
+        padding: 14px;
         text-align: left;
-        border: 1px solid #000000;
+        border-bottom: 2px solid var(--border-color);
     }
 
     td {
-        padding: 12px 10px;
-        border: 1px solid #e0e0e0;
-        vertical-align: top;
+        padding: 14px;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--bg-card);
     }
 
-    tr:nth-child(even) td {
-        background-color: #fcfcfcf;
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover td {
+        background-color: #1C2637;
+    }
+
+    .highlight-row td {
+        background: linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(19, 26, 38, 1) 100%);
+        border-left: 2px solid var(--accent-purple);
+        font-weight: 600;
+    }
+
+    .metric-value {
+        font-weight: 700;
+        color: #FFFFFF;
+    }
+   
+    .metric-tag {
+        font-size: 8.5pt;
+        color: var(--text-secondary);
+        display: block;
+        margin-top: 4px;
+        line-height: 1.3;
+    }
+
+    /* Print Stylesheet Adjustments for PDF Compilation */
+    @media print {
+        body {
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 0;
+        }
+        h1, h2, h3 { color: #000000; }
+        h1 { -webkit-text-fill-color: #000000; }
+        .concept-card, .math-panel, .terminal-console, td {
+            background: #FFFFFF !important;
+            color: #000000 !important;
+            border: 1px solid #000000 !important;
+            box-shadow: none !important;
+        }
+        .terminal-header { color: #000000 !important; }
+        td { background-color: #FFFFFF !important; }
+        tr:nth-child(even) td { background-color: #F9FAFB !important; }
+        .highlight-row td { background-color: #F3F4F6 !important; }
+        @page {
+            size: A4;
+            margin: 20mm;
+            @bottom-right { content: counter(page); color: #000000; }
+        }
     }
 </style>
-<title>Conceptual Companion & Primer to TO-MoE Architectures</title>
 </head>
 <body>
 
-    <h1>The Layman's Blueprint to Sparse Architecture & Compute Scaling</h1>
-    <div class="subtitle">An Intuitive, Step-by-Step Breakdown of TO-MoE Methodology and Experimental Metrics</div>
+    <div class="container">
+        <div class="header-section">
+            <span class="badge">Technical Reference Architecture</span>
+            <h1>The Blueprint to Sparse Architecture & Compute Scaling</h1>
+            <div class="subtitle">An Intuitive, Step-by-Step Breakdown of TO-MoE Methodology and Experimental Metrics</div>
+        </div>
 
-    <h2>1. Introduction to the Core Problem</h2>
-    <p>Standard Artificial Intelligence models are monolithic. When you type a simple question like "What is 2 + 2?" or a highly complex request like "Draft a complete business model and technical specification for a decentralized software application," a traditional neural network spends the exact same amount of energy and activates every single parameter inside its system. This is structurally inefficient and fundamentally detached from human cognitive behaviors.</p>
-    
-    <p>When humans encounter a problem, we execute two primary cognitive actions: we decide <em>who</em> is best suited to handle the task (specialization), and we decide <em>how much time</em> to spend thinking about it (budgeting effort). If a problem is trivial, we resolve it instantaneously with an intuitive, automatic reflex. If the task is an advanced architectural problem, we scale our thinking time over minutes, hours, or days, tracking ideas across structural steps. The <strong>Thinking-Optimal Mixture-of-Experts (TO-MoE)</strong> framework is a blueprint built to give software systems this exact balance.</p>
+        <h2>1. Introduction to the Core Problem</h2>
+        <p>Standard Artificial Intelligence models utilize monolithic computational paths. When processing tasks ranging from elementary arithmetic evaluations to multi-layered, non-linear decentralized systems design specifications, conventional foundation networks consume identical execution energy budgets and activate all structural parameters inside the pipeline. This structural setup incurs extreme computational inefficiency and remains detached from natural cognitive workflows.</p>
+       
+        <p>Biological intelligence optimization operates via a dual-axis cognitive mechanism: task-specific physical routing determines architectural specialization, and localized complexity profiling manages runtime budget constraints. Simple environmental inputs prompt direct, sub-reflective execution tracks. Conversely, novel abstract problems trigger multi-stage internal simulation steps, scaling time resource allocations dynamically. The <strong>Thinking-Optimal Mixture-of-Experts (TO-MoE)</strong> framework formalizes this dual optimization methodology within deep learning systems.</p>
 
-    <div class="analogy-box">
-        <div class="analogy-box-title">Analogy Room: The Master Workshop</div>
-        Imagine a massive consulting firm. In a standard firm (Monolithic Model), every single employee from the CEO to the interns must sit in a room and read every incoming message together, yelling a single word in unison to answer. In a <strong>Static MoE</strong> firm, a receptionist sends the letter to one specific room of specialists, but that room only gets 5 seconds to reply, whether the letter is a simple joke or a complex tax audit. In a <strong>TO-MoE</strong> workshop, the supervisor looks at the message, selects the perfect small team, and explicitly hands them a timer tailored to the task: "Take 2 minutes for this simple check," or "Take 3 hours to map out this entire blueprint."
+        <div class="concept-card">
+            <div class="concept-card-title">
+                <svg style="width:16px;height:16px;margin-right:8px;fill:currentColor" viewBox="0 0 20 20"><path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
+                Operational Paradigm Analogy
+            </div>
+            Consider a global professional consultancy. In a classical **Monolithic Framework**, every individual within the organization must simultaneously analyze every incoming document, generating output tokens uniformly via collective consensus. Within a **Static MoE Framework**, a front-end router partitions work directly to explicit technical teams; however, execution runtimes remain fixed to rigid, sub-second intervals regardless of the target processing complexity. Under the **TO-MoE Paradigm**, the structural complexity profiling matrix determines team selection and assigns variable runtime thresholds dynamically tailored to execution limits.
+        </div>
+
+        <h2>2. Technical Methodology & Formalism</h2>
+        <p>The technical implementation formalizes model architecture as a dynamically routed, directed graph representation structure denoted by the mathematical state matrix:</p>
+        <div class="math-panel">G = (M, E)</div>
+        <ul>
+            <li><strong>Graph Nodes (M):</strong> Distinct neural module layers or parameter sub-spaces optimized for specific operational tasks (e.g., algorithmic execution, multi-turn history consolidation, contextual styling parameters).</li>
+            <li><strong>Graph Edges (E):</strong> Directional channels directing latent vector migrations across processing intervals.</li>
+        </ul>
+
+        <h3>2.1 Latent Projection and Feature Extraction</h3>
+        <p>Incoming textual tokens undergo mathematical transformation via non-linear feature encoders to establish their location within hidden geometric vector distributions:</p>
+        <div class="math-panel">z_t = m_percept(x_t)</div>
+        <p>The operational layer maps raw structural characters into high-dimensional hidden spaces, encapsulating latent semantics, syntactic constraints, and baseline domain requirements into structured numerical arrays.</p>
+
+        <h3>2.2 Memory Operating Systems and Context Stabilization</h3>
+        <p>To avoid context-window dilution across extensive reasoning chains, the architecture offloads persistent states to separate operational layers interfacing with indexable contextual matrix blocks:</p>
+        <div class="math-panel">h_{t+1} = m_memory(h_t, z_t)</div>
+        <p>Instead of storing history within immediate active parameters, contextual markers partition across indexable repositories. This configuration unifies active target states with long-range historical parameters without over-allocating hidden computational tokens.</p>
+
+        <h3>2.3 Gated Routing Optimization and Computational Loops</h3>
+        <p>Conventional mixture architectures evaluate static routing gates based purely on routing scores. The TO-MoE architecture employs dual-purpose optimization arrays:</p>
+        <div class="math-panel">a_i^t = r(m_i, h_{t+1}, c_t)</div>
+        <p>Evaluating localized task-difficulty criteria alongside hidden layer vectors yields specific distribution coefficients. Rather than operating strictly as feature scaling metrics, these indicators dictate algorithmic execution intervals:</p>
+        <div class="math-panel">L_i = floor(psi(a_i^t))</div>
+        <p>The ceiling parameter tracks depth configurations. When problem constraints trigger complexity thresholds, internal loop metrics scale upward, triggering sustained iterative traces within target modules to stabilize processing precision.</p>
+
+        <div class="terminal-console"><div class="terminal-header">Console Output // Runtime Routing Log // Algorithm 1</div>
+[INFO] Processing Latent Token Node Block: Vector Sequence Initialization
+[LOG]  Analyzing Target Entropy Vector... Task Complexity Profile Spiked.
+[LOG]  Task Domain Identified: [COMPUTATIONAL LOGIC / ADVANCED METRICS]
+[GATE] Evaluating Neural Array Weights:
+       - Module 01 (General Chat Matrix):  0.102  --> [BYPASS]
+       - Module 04 (Algorithmic Logic):   0.948  --> [ACTIVATE]
+[EXEC] High-Difficulty Gating Route Confirmed.
+[EXEC] Allocation Engine Dispatched: Assigning Variable Processing Depth.
+[EXEC] Compute Budget Locked: 500 Iterative Internal State Loops.
+[INFO] Executing Recurrent Optimization Loops...
+[INFO] Target Convergence Met. Dispatching Refined Token to Assembly Layers.</div>
+
+        <h2>3. Experimental Verification & Discussion</h2>
+        <p>System evaluations across verified computing testing parameters demonstrate performance behaviors when executing under identical hardware constraints across multiple evaluation domains:</p>
+        <ul>
+            <li><strong>ARC-AGI-2 Index:</strong> Measures conceptual fluid intelligence and novel rule abstractions across out-of-distribution environments.</li>
+            <li><strong>Olympiad Bench Matrix:</strong> Assesses multi-stage mathematical proof structures and rigid symbolic tracking.</li>
+            <li><strong>GDPval Enterprise Metrics:</strong> Standardizes production-tier workflows including systems engineering and corporate financial analysis.</li>
+            <li><strong>Operational Footprint Analysis:</strong> Records floating-point execution cost values to calculate actual physical processing footprints.</li>
+        </ul>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Architecture Baseline</th>
+                    <th>Fluid Intelligence (ARC)</th>
+                    <th>Hard Science (Olympiad)</th>
+                    <th>Economic Utility (GDPval)</th>
+                    <th>Computational Overhead</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Monolithic Dense Configuration</strong><br><small>Static execution baseline framework</small></td>
+                    <td><span class="metric-value">42.5%</span><span class="metric-tag">Limited structural adaptation</span></td>
+                    <td><span class="metric-value">38.2%</span><span class="metric-tag">Fails on deep proofs</span></td>
+                    <td><span class="metric-value">61.4</span><span class="metric-tag">Standard performance indicators</span></td>
+                    <td><span class="metric-value">1.00&times;</span><span class="metric-tag">Standard energy baseline</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Static MoE Configuration</strong><br><small>Parameter-sparse token allocation</small></td>
+                    <td><span class="metric-value">48.1%</span><span class="metric-tag">Localized efficiency gains</span></td>
+                    <td><span class="metric-value">41.5%</span><span class="metric-tag">Traces break under short cycles</span></td>
+                    <td><span class="metric-value">65.8</span><span class="metric-tag">Moderate corporate deployment</span></td>
+                    <td><span class="metric-value">0.45&times;</span><span class="metric-tag">High transactional throughput</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Dense + Uniform Scaffolding</strong><br><small>Static test-time expansion layers</small></td>
+                    <td><span class="metric-value">56.8%</span><span class="metric-tag">Brute-force path generation</span></td>
+                    <td><span class="metric-value">54.3%</span><span class="metric-tag">High mathematical error safety</span></td>
+                    <td><span class="metric-value">72.1</span><span class="metric-tag">Strong structural deliverables</span></td>
+                    <td><span class="metric-value">3.40&times;</span><span class="metric-tag">Prohibitive runtime scaling costs</span></td>
+                </tr>
+                <tr class="highlight-row">
+                    <td><strong>Adaptive TO-MoE Framework</strong><br><small>Dynamic routing depth pairing</small></td>
+                    <td><span class="metric-value">68.4%</span><span class="metric-tag">High contextual fluidity</span></td>
+                    <td><span class="metric-value">62.9%</span><span class="metric-tag">Maintains strict multi-step proofs</span></td>
+                    <td><span class="metric-value">84.3</span><span class="metric-tag">Excellent cross-domain specifications</span></td>
+                    <td><span class="metric-value">0.68&times;</span><span class="metric-tag">Optimized Pareto resource curve</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.1 Efficiency Frontier Trade-Off Analyses</h3>
+        <p>Evaluating uniform scaling variants reveals significant resource constraints. Uniform scaffolding models establish functional reasoning stability across specialized datasets but impose severe resource requirements due to handling simple syntactic expressions with the same depth as complex proofs.</p>
+       
+        <p>The TO-MoE methodology minimizes these resource constraints. Directing processing steps into deep computing paths strictly when system metrics trace structural variance indicators helps achieve higher performance across abstract testing profiles while operating below standard energy footprints. Core text processing streams utilize light execution pathways, routing complex logic patterns into deeper processing matrices.</p>
+
+        <h2>4. Identified Operational Constraints</h2>
+        <ol>
+            <li><strong>Discontinuous Optimization Thresholds:</strong> The integration of floor calculations mapping continuous routing parameters into concrete step counts creates non-differentiable step updates. Bypassing gradient propagation challenges requires specialized reinforcement training frameworks, adding complexity to baseline convergence setups.</li>
+            <li><strong>Adversarial Input Distortions:</strong> System stability depends on the classification precision of the difficulty profiler. Prompts containing complex logical contradictions hidden beneath standard text structures can bypass gating mechanisms, leading to minor resource allocations and early execution errors.</li>
+        </ol>
+
+        <h2>5. Core Architectural Insights</h2>
+        <ul>
+            <li><strong>Sparse Task Segmentation:</strong> Minimizing physical activation pathways across straightforward tasks helps protect vital computational capacity.</li>
+            <li><strong>Elastic Execution Depth:</strong> Shifting from models scaled entirely by raw parameter scale to architectures optimized via target processing runtime configurations improves cross-domain efficiency.</li>
+            <li><strong>Integrated Resource Balancing:</strong> Embedding execution runtime rules within dynamic routing frameworks builds autonomous processing mechanics that align model complexity with individual task costs.</li>
+        </ul>
     </div>
-
-    <h2>2. Breaking Down Section 3: Methodology & Technical Formalism</h2>
-    <p>Section 3 of the main text establishes a mathematical baseline for how information routes through this dynamic structure. Let us break down every equation and technical term step-by-step so that it can be grasped without prior mathematical maturity.</p>
-
-    <h3>2.1 The Network Graph Structure</h3>
-    <p>The text formalizes the architecture as a directed graph: <em>G = (M, E)</em>. Do not let the notation obscure the simplicity of the concept:</p>
-    <ul>
-        <li><strong>Nodes (M):</strong> These are the distinct specialized rooms or "experts" inside the model. One room might be incredible at processing structured Python programming logic; another is tailored to tracking dates and temporal timelines; a third handles simple conversational flows.</li>
-        <li><strong>Edges (E):</strong> These are simply the informational data cables connecting the rooms together, dictating who can talk to whom.</li>
-    </ul>
-
-    <h3>2.2 Step 1: Perception & Encoding</h3>
-    <p>When an external input text arrives, it cannot be read by the neural layers in its raw characters. It is projected into a multi-dimensional mathematical coordinate called a latent embedding:</p>
-    <div class="math-block">z_t = m_percept(x_t)</div>
-    <p>Think of <em>x_t</em> as the raw text arriving at the door. The function <em>m_percept</em> acts like an advanced translator that reads the text and condenses its intent, tone, and domain into a dense list of numbers (<em>z_t</em>) representing its precise semantic location.</p>
-
-    <h3>2.3 Step 2: Persistent Context Integration (MemOS & MemCubes)</h3>
-    <p>Traditional AI systems forget previous instructions the moment their active text block overflows. To prevent this, our model implements a dedicated Memory Operating System (MemOS):</p>
-    <div class="math-block">h_{t+1} = m_memory(h_t, z_t)</div>
-    <p>Instead of forcing the core model to hold raw historical transcripts, data is packed into modular structures called <strong>MemCubes</strong>. Think of a MemCube as an indexed drawer in a physical filing cabinet. The system reads the incoming translated input (<em>z_t</em>), looks at what is currently top-of-mind (<em>h_t</em>), and pulls the exact historical drawer needed, combining them into an updated global context framework (<em>h_{t+1}</em>).</p>
-
-    <h3>2.4 Step 3 & 4: The Joint Router (The Core Innovation)</h3>
-    <p>In traditional Mixture-of-Experts systems, routing is simple: a token passes through a mathematical function that spits out a soft percentage weight for each expert. In TO-MoE, the router serves a dual purpose:</p>
-    <div class="math-block">a_i^t = r(m_i, h_{t+1}, c_t)</div>
-    <p>The variable <em>c_t</em> represents a difficulty profile. The router evaluates the module <em>m_i</em> against the current state and difficulty. The output weight <em>a_i^t</em> does not just control how loudly that expert's voice is heard; it directly dictates a loop variable: <em>L_i = floor(psi(a_i^t))</em>. This determines the structural depth—the number of tokens or thinking cycles—allocated to that expert. If a task requires intense logical computation, the value scales upward, extending the loop length allowed for that module.</p>
-
-    <div class="flow-block"><b>The Flow in Human Terms (Algorithm 1 Pseudocode Breakdown)</b>
-1. A prompt comes in: "Write an optimized compiler code module."
-2. The Profiler analyzes the text: This is HIGH DIFFICULTY in COMPUTER SCIENCE.
-3. The Router checks the rooms:
-    - Conversational Room score: 0.1 (Ignore)
-    - Coding Expert Room score: 0.95 (Activate!)
-4. Because the Coding Room score is high, it is assigned a high Compute Budget (e.g., 500 internal planning steps).
-5. The Coding Expert loops, drafts code, checks for errors, and refines its plan over 500 steps.
-6. The final output is packaged and delivered to the user.</div>
-
-    <h2>3. Breaking Down Section 4: Experimental Verification & Data</h2>
-    <p>Section 4 presents a comparative baseline showing how this framework behaves when measured against traditional architectures under identical resource limits. Let's unpack what these scores mean in normal language.</p>
-
-    <h3>3.1 Understanding the Evaluation Axes</h3>
-    <ul>
-        <li><strong>ARC-AGI-2:</strong> A rigorous benchmark designed to test an AI's ability to learn entirely new concepts on the fly. It does not test memory or facts; it presents abstract visual puzzles the model has never seen before, measuring fluid intelligence.</li>
-        <li><strong>Olympiad Bench:</strong> High-level competitive math and science problems from international competitions. These require multi-step proofs where single character errors break the entire outcome.</li>
-        <li><strong>GDPval Score:</strong> A metric that evaluates models on tasks that translate directly to human professional employment fields (e.g., legal analysis, financial engineering, software architecture). Higher scores translate to real economic utility.</li>
-        <li><strong>Inference Efficiency (FLOPs/Token):</strong> FLOP stands for <em>Floating-Point Operation</em>—a basic unit of computer math. This scales the structural electricity and computing cost required to output a word. A lower number means the model is faster and cheaper to operate.</li>
-    </ul>
-
-    <h3>3.2 Deconstructing the Benchmark Matrix</h3>
-    <p>The experimental results show a stark contrast between different architectural philosophies:</p>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Model Setup</th>
-                <th>Fluid Intelligence (ARC)</th>
-                <th>Hard Science (Olympiad)</th>
-                <th>Economic Value (GDPval)</th>
-                <th>Operating Cost Efficiency</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Monolithic Dense</strong><br><em>(Classic Uniform AI)</em></td>
-                <td>42.5%<br><small>Struggles with entirely new abstract shapes</small></td>
-                <td>38.2%<br><small>Fails on deep, complex multi-step proofs</small></td>
-                <td>61.4<br><small>Average output on complex business work</small></td>
-                <td>1.00&times;<br><small>Standard base baseline cost</small></td>
-            </tr>
-            <tr>
-                <td><strong>Static MoE</strong><br><em>(Routes tokens but keeps time fixed)</em></td>
-                <td>48.1%<br><small>Slight gain due to specialized parameters</small></td>
-                <td>41.5%<br><small>Fails when thinking time cut short</small></td>
-                <td>65.8<br><small>Moderate professional grade capacity</small></td>
-                <td>0.45&times;<br><small>Very cheap, but lacks reasoning depth</small></td>
-            </tr>
-            <tr>
-                <td><strong>Dense + Scaffolded TTS</strong><br><em>(Forces long paths uniformly)</em></td>
-                <td>56.8%<br><small>Better puzzle solving via brute force</small></td>
-                <td>54.3%<br><small>High math accuracy through raw sampling</small></td>
-                <td>72.1<br><small>Strong professional quality work</small></td>
-                <td>3.40&times;<br><small>Extremely slow and expensive to deploy</small></td>
-            </tr>
-            <tr style="font-weight:bold; background-color:#eaeaea;">
-                <td>TO-MoE<br><em>(Our Adaptive Approach)</em></td>
-                <td>68.4%<br><em>High fluidity; adapts depth to shapes</em></td>
-                <td>62.9%<br><em>Solves complex proofs by tracking states</em></td>
-                <td>84.3<br><em>Excellent, context-aware business specs</em></td>
-                <td>0.68&times;<br><em>Saves energy on easy parts; scales on hard</em></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h3>3.3 The Core Trade-Off: Efficiency vs. Depth</h3>
-    <p>Look carefully at the <strong>Monolithic + Scaffolded TTS</strong> row compared to the <strong>TO-MoE</strong> row. The scaffolded brute force approach achieves good accuracy on math (54.3%) but costs a massive <strong>3.40&times;</strong> the baseline energy budget because it forces the model to generate huge, looping paragraphs for every single prompt, regardless of whether it's necessary.</p>
-    
-    <p>TO-MoE achieves significantly higher scores across every single benchmark category (68.4% on fluid intelligence, 84.3 on business tasks) while keeping operational costs at a remarkably low <strong>0.68&times;</strong>. It accomplishes this because it saves power during simple structural parts of a prompt and allocates those saved compute cycles directly into intense, deeply layered reasoning loops only when the problem complexity profiling layer indicators spike.</p>
-
-    <h2>4. Honest Limitations Explained Simply</h2>
-    <p>No architecture is flawless. To understand the technology deeply, one must understand exactly where it can break down:</p>
-    <ol>
-        <li><strong>The Mathematical Rounding Problem:</strong> In Section 3, the formula uses a mathematical floor function (<em>floor</em>) to convert a continuous router score into a concrete number of loops (e.g., a score of 4.8 becomes exactly 4 thinking loops). In calculus and computer optimization, step changes like this are non-differentiable—meaning you cannot run standard smooth backward error propagation directly through them. Training this system requires complex secondary reward systems that can be unstable during initial stages.</li>
-        <li><strong>Adversarial Tricking (Misprofiling):</strong> The entire system relies on its ability to correctly judge a problem's difficulty up front. If an expert trickster inputs a prompt that looks like simple conversational text on the surface, but contains a hidden, incredibly dense logical paradox inside, the model might assign it a minimal complexity score. The system will route it to a basic conversational room with an extremely low loop budget, resulting in a rapid, surface-level error rather than an indepth exploration.</li>
-    </ol>
-
-    <h2>5. Key Takeaways for the Beginner</h2>
-    <ul>
-        <li><strong>Sparsity Means Efficiency:</strong> You do not need to wake up the whole brain to solve a simple math problem. You only activate the specific cluster that matters.</li>
-        <li><strong>Compute Scaling Means Variable Effort:</strong> Instead of making models larger, we make them smarter about how much time they spend thinking about a problem before spitting out an answer.</li>
-        <li><strong>Unified Integration:</strong> By embedding the decision of "how long to think" directly inside the structural selection layers, we build an autonomous system that balances precision, depth, and energy consumption automatically.</li>
-    </ul>
 
 </body>
 </html>
-"""
 
-# Compile into a local PDF
-output_pdf = "TO_MoE_Deep_Dive_Companion.pdf"
-print("Compiling your PDF...")
-HTML(string=html_content).write_pdf(output_pdf)
-print(f"Done! Your PDF has been saved locally as: {os.path.abspath(output_pdf)}")
+ 
